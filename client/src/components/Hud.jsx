@@ -20,6 +20,11 @@ export default function Hud({ state, online, onLeave }) {
       {playing && state.phase !== "gameover" && (
         <p className="hud__round">
           Rodada <strong>{state.round}</strong>
+          {state.settings.themeMode === "vote" && state.themePoolSize > 0 && (
+            <span className="hud__pool" title="Temas restantes na fila">
+              {" "}· {state.themePoolSize} tema{state.themePoolSize > 1 ? "s" : ""} na fila
+            </span>
+          )}
         </p>
       )}
 

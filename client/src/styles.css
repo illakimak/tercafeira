@@ -365,6 +365,12 @@ input {
   font-weight: 700;
 }
 
+.hud__pool {
+  font-weight: 400;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
 .hud__offline {
   font-weight: 800;
   color: var(--bad);

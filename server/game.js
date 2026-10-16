@@ -30,6 +30,7 @@ export function createRoom(code) {
     usedThemes: [],
     themeSuggestions: new Map(),
     themeSamples: [],
+    themePool: [], // temas sugeridos que ainda não foram usados
     hovering: new Map(), // playerId -> cardId
     order: [],
     result: null,
@@ -112,15 +113,21 @@ function checkThemeProgress(room) {
   }
 }
 
-function applyRandomSuggestion(room) {
-  const suggestions = [...room.themeSuggestions.values()];
-  const picked = suggestions[Math.floor(Math.random() * suggestions.length)];
+function applyThemeFromPool(room) {
+  const idx = Math.floor(Math.random() * room.themePool.length);
+  const picked = room.themePool.splice(idx, 1)[0];
   const fromList = THEMES.find((t) => t.title === picked.text);
   room.theme = {
     title: picked.text,
     low: picked.low || (fromList?.low ?? "pouco"),
     high: picked.high || (fromList?.high ?? "muito"),
   };
+}
+
+function applyRandomSuggestion(room) {
+  // Adiciona todas as sugestões desta votação ao pool
+  room.themePool.push(...room.themeSuggestions.values());
+  applyThemeFromPool(room);
   startRound(room);
 }
 
@@ -152,6 +159,7 @@ export function startGame(room) {
   room.round = 0;
   room.usedThemes = [];
   room.theme = null;
+  room.themePool = [];
 
   if (room.settings.themeMode === "vote") {
     startThemeVotePhase(room);
@@ -216,7 +224,12 @@ export function reveal(room) {
 export function nextRound(room) {
   if (room.phase !== "reveal") return "Ainda não dá para avançar.";
   if (room.settings.themeMode === "vote") {
-    startThemeVotePhase(room);
+    if (room.themePool.length > 0) {
+      applyThemeFromPool(room);
+      startRound(room);
+    } else {
+      startThemeVotePhase(room);
+    }
   } else {
     room.theme = pickAutoTheme(room);
     startRound(room);
@@ -240,7 +253,11 @@ export function refreshTheme(room) {
   room.order = [];
   room.hovering = new Map();
   if (room.settings.themeMode === "vote") {
-    startThemeVotePhase(room);
+    if (room.themePool.length > 0) {
+      applyThemeFromPool(room);
+    } else {
+      startThemeVotePhase(room);
+    }
   } else {
     room.theme = pickAutoTheme(room);
   }
@@ -264,6 +281,7 @@ export function backToLobby(room) {
   room.correct = 0;
   room.themeSuggestions = new Map();
   room.themeSamples = [];
+  room.themePool = [];
   room.hovering = new Map();
   for (const p of room.players.values()) {
     p.inRound = false;
@@ -311,6 +329,7 @@ export function viewFor(room, playerId) {
     correct: room.correct,
     round: room.round,
     theme: room.theme,
+    themePoolSize: room.themePool.length,
     themeVoters:
       room.phase === "theme-vote"
         ? [...room.players.values()].map((p) => ({
