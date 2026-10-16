@@ -205,7 +205,23 @@ app.get("/health", (_req, res) => res.json({ ok: true, rooms: rooms.size }));
 // Em produção o próprio servidor entrega o app React já compilado
 const dist = path.join(__dirname, "../client/dist");
 if (fs.existsSync(dist)) {
-  app.use(express.static(dist));
+  app.use(
+    express.static(dist, {
+      setHeaders(res, file) {
+        const name = path.basename(file);
+        if (file.includes(`${path.sep}assets${path.sep}`)) {
+          // nomes com hash: nunca mudam, podem ficar um ano no cache
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        } else if (name === "sw.js" || name === "index.html" || name === "manifest.webmanifest") {
+          // o navegador precisa ver versões novas na hora para atualizar o app instalado
+          res.setHeader("Cache-Control", "no-cache");
+        }
+        if (name === "manifest.webmanifest") {
+          res.setHeader("Content-Type", "application/manifest+json");
+        }
+      },
+    }),
+  );
   app.get("*", (_req, res) => res.sendFile(path.join(dist, "index.html")));
 }
 
