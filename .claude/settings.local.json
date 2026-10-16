@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:OPENSSL_ia32cap = \"~0x200000200000000\"; cd \"c:\\\\Users\\\\User\\\\Downloads\\\\ito-online\\\\ito-online\"; npm install-scripts approve esbuild@0.21.5 --prefix client 2>&1; npm rebuild esbuild --prefix client 2>&1)",
+      "PowerShell($env:OPENSSL_ia32cap = \"~0x200000200000000\"; cd \"c:\\\\Users\\\\User\\\\Downloads\\\\ito-online\\\\ito-online\"; npm run dev 2>&1)",
+      "PowerShell([System.Environment]::SetEnvironmentVariable\\(\"OPENSSL_ia32cap\", \"~0x200000200000000\", \"User\"\\))",
+      "PowerShell([System.Environment]::GetEnvironmentVariable\\(\"OPENSSL_ia32cap\", \"User\"\\))",
+      "Bash(grep -E \"\\\\.js$\")",
+      "PowerShell($proc = Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -First 1; if \\($proc\\) { Stop-Process -Id $proc -Force; \"Processo $proc encerrado\" } else { \"Porta livre\" })",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)",
+      "PowerShell(\"Todos os processos node encerrados\")",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
