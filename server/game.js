@@ -30,6 +30,7 @@ export function createRoom(code) {
     usedThemes: [],
     themeSuggestions: new Map(),
     themeSamples: [],
+    hovering: new Map(), // playerId -> cardId
     order: [],
     result: null,
     emptySince: null,
@@ -79,6 +80,7 @@ function startRound(room) {
   room.phase = "clues";
   room.result = null;
   room.order = [];
+  room.hovering = new Map();
 
   for (const p of room.players.values()) {
     p.inRound = false;
@@ -95,6 +97,7 @@ function startRound(room) {
 function startThemeVotePhase(room) {
   room.phase = "theme-vote";
   room.themeSuggestions = new Map();
+  room.hovering = new Map();
   const pool = THEMES.filter((t) => !room.usedThemes.includes(t.title));
   const source = pool.length >= 5 ? pool : [...THEMES];
   room.themeSamples = shuffle(source).slice(0, 5);
@@ -221,6 +224,29 @@ export function nextRound(room) {
   return null;
 }
 
+export function setHover(room, playerId, cardId) {
+  if (cardId) {
+    room.hovering.set(playerId, cardId);
+  } else {
+    room.hovering.delete(playerId);
+  }
+}
+
+export function refreshTheme(room) {
+  if (room.phase !== "clues") return "Só dá para trocar o tema durante as dicas.";
+  for (const p of room.players.values()) {
+    p.clue = "";
+  }
+  room.order = [];
+  room.hovering = new Map();
+  if (room.settings.themeMode === "vote") {
+    startThemeVotePhase(room);
+  } else {
+    room.theme = pickAutoTheme(room);
+  }
+  return null;
+}
+
 export function endGame(room) {
   if (room.phase !== "reveal") return "Ainda não dá para encerrar.";
   room.phase = "gameover";
@@ -238,6 +264,7 @@ export function backToLobby(room) {
   room.correct = 0;
   room.themeSuggestions = new Map();
   room.themeSamples = [];
+  room.hovering = new Map();
   for (const p of room.players.values()) {
     p.inRound = false;
     p.number = null;
@@ -320,6 +347,10 @@ export function viewFor(room, playerId) {
               card.number = p.number;
               card.ok = room.result?.details.find((d) => d.id === p.id)?.ok ?? false;
             }
+            card.hoverers = [...room.hovering.entries()]
+              .filter(([, cid]) => cid === p.id)
+              .map(([pid]) => ({ id: pid, name: room.players.get(pid)?.name }))
+              .filter((h) => h.name);
             return card;
           })
       : [],

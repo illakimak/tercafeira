@@ -638,12 +638,33 @@ input {
 .card__head {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 7px 10px;
   background: hsl(var(--h) 80% 72%);
   border-bottom: var(--border);
   font-weight: 800;
   font-size: 0.9rem;
+}
+
+.card__cursors {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.card__cursor {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: hsl(var(--h) 75% 60%);
+  border: 2px solid var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
 }
 
 .card__who {

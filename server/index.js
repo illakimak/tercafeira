@@ -149,6 +149,13 @@ io.on("connection", (socket) => {
     ),
   );
   socket.on("game:start", withRoom((room) => game.startGame(room), { host: true }));
+  socket.on("theme:refresh", withRoom((room) => game.refreshTheme(room), { host: true }));
+  socket.on("card:hover", ({ cardId } = {}) => {
+    const c = ctx();
+    if (!c) return;
+    game.setHover(c.room, c.player.id, cardId ?? null);
+    broadcast(c.room);
+  });
   socket.on("clue:submit", withRoom((room, p, { text }) => game.submitClue(room, p.id, text)));
   socket.on("order:move", withRoom((room, _p, { order }) => game.moveOrder(room, order)));
   socket.on("game:reveal", withRoom((room) => game.reveal(room), { host: true }));

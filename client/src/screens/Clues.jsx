@@ -3,7 +3,7 @@ import PlayerList from "../components/PlayerList.jsx";
 import ThemeBanner from "../components/ThemeBanner.jsx";
 import { plural, rampVar } from "../util.js";
 
-export default function Clues({ state, act }) {
+export default function Clues({ state, isHost, act }) {
   const { me, players, hostId } = state;
   const [text, setText] = useState(me.clue || "");
   const [hidden, setHidden] = useState(false);
@@ -37,6 +37,17 @@ export default function Clues({ state, act }) {
   return (
     <div className="clues">
       <ThemeBanner theme={state.theme} />
+
+      {isHost && (
+        <button
+          type="button"
+          className="btn btn--small"
+          style={{ justifySelf: "start" }}
+          onClick={() => act("theme:refresh")}
+        >
+          ↻ Trocar tema
+        </button>
+      )}
 
       <section className="secret" style={{ "--c": rampVar(me.number) }}>
         <p className="secret__label">Seu número. Só você vê.</p>

@@ -17,9 +17,10 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useEffect, useMemo, useState } from "react";
 import ThemeBanner from "../components/ThemeBanner.jsx";
+import { socket } from "../socket.js";
 import { hue, rampVar } from "../util.js";
 
-function SortableCard({ card, index, revealed, mine }) {
+function SortableCard({ card, index, revealed, mine, meId }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
     disabled: revealed,
@@ -32,12 +33,15 @@ function SortableCard({ card, index, revealed, mine }) {
     "--h": hue(card.name),
   };
   const verdict = revealed ? (card.ok ? "is-ok" : "is-bad") : "";
+  const otherHoverers = (card.hoverers || []).filter((h) => h.id !== meId);
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={`card ${verdict} ${isDragging ? "is-dragging" : ""} ${revealed ? "" : "is-movable"}`}
+      onPointerEnter={() => socket.emit("card:hover", { cardId: card.id })}
+      onPointerLeave={() => socket.emit("card:hover", { cardId: null })}
       {...attributes}
       {...(revealed ? {} : listeners)}
     >
@@ -46,6 +50,20 @@ function SortableCard({ card, index, revealed, mine }) {
           {card.name}
           {mine && " (você)"}
         </span>
+        {otherHoverers.length > 0 && (
+          <div className="card__cursors">
+            {otherHoverers.map((h) => (
+              <span
+                key={h.id}
+                className="card__cursor"
+                style={{ "--h": hue(h.name) }}
+                title={h.name}
+              >
+                {h.name[0]}
+              </span>
+            ))}
+          </div>
+        )}
         <span className="card__pos">{index + 1}</span>
       </div>
       <p className="card__clue">{card.clue}</p>
@@ -67,7 +85,6 @@ export default function Table({ state, isHost, act }) {
   const serverKey = state.cards.map((c) => c.id).join("|");
   const [ids, setIds] = useState(() => (serverKey ? serverKey.split("|") : []));
 
-  // O servidor é a fonte da verdade: qualquer mudança de ordem de outro jogador chega aqui
   useEffect(() => {
     setIds(serverKey ? serverKey.split("|") : []);
   }, [serverKey]);
@@ -83,7 +100,7 @@ export default function Table({ state, isHost, act }) {
   const onDragEnd = ({ active, over }) => {
     if (!over || active.id === over.id) return;
     const next = arrayMove(ids, ids.indexOf(active.id), ids.indexOf(over.id));
-    setIds(next); // atualiza na hora; o servidor confirma e replica para os outros
+    setIds(next);
     act("order:move", { order: next });
   };
 
@@ -117,6 +134,7 @@ export default function Table({ state, isHost, act }) {
                 index={i}
                 revealed={revealed}
                 mine={card.id === state.me.id}
+                meId={state.me.id}
               />
             ))}
           </div>
