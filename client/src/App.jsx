@@ -8,6 +8,22 @@ import Lobby from "./screens/Lobby.jsx";
 import Table from "./screens/Table.jsx";
 import ThemeVote from "./screens/ThemeVote.jsx";
 
+// Hospedagem gratuita "dorme" quando fica parada: a primeira visita pode levar quase um minuto
+function Boot() {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSlow(true), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="boot" role="status">
+      <p>Conectando ao servidor…</p>
+      {slow && <p className="muted">O servidor estava dormindo e está acordando. Pode levar até 1 minuto.</p>}
+    </div>
+  );
+}
+
 export default function App() {
   const [state, setState] = useState(null);
   const [online, setOnline] = useState(false);
@@ -55,13 +71,7 @@ export default function App() {
     window.history.replaceState(null, "", window.location.pathname);
   }, []);
 
-  if (!ready) {
-    return (
-      <div className="boot" role="status">
-        Conectando ao servidor…
-      </div>
-    );
-  }
+  if (!ready) return <Boot />;
 
   if (!state) return <Home onEnter={enter} online={online} />;
 
